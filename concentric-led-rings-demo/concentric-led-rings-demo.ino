@@ -1,5 +1,5 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Environmental Data Array data collection firmware
+// Concentric RGB LED rings demo
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 /*
     Copyright (c) 2016 Martin F. Falatic
@@ -23,16 +23,25 @@
 #include "neopixel/neopixel.h"  // LGPL
 
 #define PIXEL_PIN D0
-#define PIXEL_COUNT 93
 #define PIXEL_TYPE WS2812B
-const static int MAX_INTENSITY = 8;
 
-Adafruit_NeoPixel full_ring = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
+const int MAX_INTENSITY = 8;
+const int pixelCnt = 93;
+const int rings[6][2] =
+    {{ 0,  1},
+     { 1,  8},
+     { 9, 12},
+     {21, 16},
+     {37, 24},
+     {61, 32}};
+
+Adafruit_NeoPixel * full_ring;
 
 void setup()
 {
-    full_ring.begin();
-    full_ring.show();
+    full_ring = new Adafruit_NeoPixel(pixelCnt, PIXEL_PIN, PIXEL_TYPE);
+    full_ring->begin();
+    full_ring->show();
 }
 
 void loop()
@@ -44,11 +53,11 @@ void loop()
 
 void all_same(int delayMS, int col_R, int col_G, int col_B)
 {
-    for (int i = 0; i < PIXEL_COUNT; i++)
+    for (int i = 0; i < pixelCnt; i++)
     {
-        full_ring.setPixelColor(i, col_R, col_G, col_B, 0);
+        full_ring->setPixelColor(i, col_R, col_G, col_B, 0);
     }
-    full_ring.show();
+    full_ring->show();
     delay(delayMS);
 }
 
@@ -56,16 +65,16 @@ void spiral1(int delayMS, int reps)
 {
     for (int j = 0; j < reps; j++)
     {
-        for (int i = 0; i < PIXEL_COUNT * 10; i++)
+        for (int i = 0; i < pixelCnt * 10; i++)
         {
-            int x = abs(((x + (PIXEL_COUNT-1)) % ((PIXEL_COUNT-1)*2)) - (PIXEL_COUNT-1));
-            full_ring.clear();
-            full_ring.setPixelColor(x % PIXEL_COUNT,
+            full_ring->clear();
+            full_ring->setPixelColor(
+                abs(((i + (pixelCnt-1)) % ((pixelCnt-1)*2)) - (pixelCnt-1)),
                 random(MAX_INTENSITY),
                 random(MAX_INTENSITY),
                 random(MAX_INTENSITY),
                 random(0));
-            full_ring.show();
+            full_ring->show();
             delay(delayMS);
         }
     }
@@ -74,15 +83,16 @@ void spiral1(int delayMS, int reps)
 void random1(int delayMS, int reps) {
     for (int j = 0; j < reps; j++)
     {
-        for (int i = 0; i  < PIXEL_COUNT; i++)
+        for (int i = 0; i  < pixelCnt; i++)
         {
-            full_ring.setPixelColor(i,
+            full_ring->setPixelColor(
+                i,
                 random(MAX_INTENSITY),
                 random(MAX_INTENSITY),
                 random(MAX_INTENSITY),
                 random(0));
         }
-        full_ring.show();
+        full_ring->show();
         delay(delayMS);
     }
 }
