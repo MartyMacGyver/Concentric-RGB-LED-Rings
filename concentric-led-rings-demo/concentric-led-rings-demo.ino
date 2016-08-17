@@ -22,8 +22,8 @@
 
 #include "neopixel/neopixel.h"  // LGPL
 
-#define PIXEL_PIN D0
-#define PIXEL_TYPE WS2812B
+#define RING_DATA_PIN   D0
+#define RING_PIXEL_TYPE WS2812B
 
 const int MAX_INTENSITY = 8;
 const int pixelCnt = 93;
@@ -39,33 +39,46 @@ Adafruit_NeoPixel * full_ring;
 
 void setup()
 {
-    full_ring = new Adafruit_NeoPixel(pixelCnt, PIXEL_PIN, PIXEL_TYPE);
+    full_ring = new Adafruit_NeoPixel(pixelCnt, RING_DATA_PIN, RING_PIXEL_TYPE);
     full_ring->begin();
     full_ring->show();
 }
 
 void loop()
 {
-    spiral1(20, 10);
+    clockwork1(15, 10);
+    spiral1(15, 10);
     random1(100, 64);
     all_same(1000, 0, 0, 0);
 }
 
-void all_same(int delayMS, int col_R, int col_G, int col_B)
+void clockwork1(int delayMS, int reps)
 {
-    for (int i = 0; i < pixelCnt; i++)
+    for (int j = 0; j < reps; j++)
     {
-        full_ring->setPixelColor(i, col_R, col_G, col_B, 0);
+        for (int i = 0; i < 32; i++)
+        {
+            full_ring->clear();
+            for (int k = 0; k < 6; k++)
+            {
+                full_ring->setPixelColor(
+                    rings[k][0]+i*rings[k][1]/32,
+                    random(MAX_INTENSITY),
+                    random(MAX_INTENSITY),
+                    random(MAX_INTENSITY),
+                    random(0));
+            }
+            full_ring->show();
+            delay(delayMS);
+        }
     }
-    full_ring->show();
-    delay(delayMS);
 }
 
 void spiral1(int delayMS, int reps)
 {
     for (int j = 0; j < reps; j++)
     {
-        for (int i = 0; i < pixelCnt * 10; i++)
+        for (int i = 0; i < (pixelCnt*2-1)*3; i++)
         {
             full_ring->clear();
             full_ring->setPixelColor(
@@ -95,4 +108,14 @@ void random1(int delayMS, int reps) {
         full_ring->show();
         delay(delayMS);
     }
+}
+
+void all_same(int delayMS, int col_R, int col_G, int col_B)
+{
+    for (int i = 0; i < pixelCnt; i++)
+    {
+        full_ring->setPixelColor(i, col_R, col_G, col_B, 0);
+    }
+    full_ring->show();
+    delay(delayMS);
 }
