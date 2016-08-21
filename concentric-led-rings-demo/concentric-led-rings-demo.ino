@@ -22,11 +22,12 @@
 
 #include "neopixel/neopixel.h"  // LGPL
 
-#define RING_DATA_PIN   D0
-#define RING_PIXEL_TYPE WS2812B
-
+const uint16_t RING_PIXEL_TYPE = WS2812B;
+const uint8_t pixelRingDataPin = D6;
+const uint8_t button1Pin = A1;
+const uint16_t pixelCnt = 93;
 const int MAX_INTENSITY = 8;
-const int pixelCnt = 93;
+
 const int rings[6][2] =
     {{ 0,  1},
      { 1,  8},
@@ -36,13 +37,35 @@ const int rings[6][2] =
      {61, 32}};
 
 Adafruit_NeoPixel * full_ring;
+volatile bool button1Pressed = false;
+int debounceWindow = 100;
+int ignoreWindow = 1000;
+
+void INT_button1()
+{
+    volatile static unsigned long tIgnorePrev = 0;
+    unsigned long tIgnoreCurr = millis();
+    volatile static unsigned long tDebouncePrev = 0;
+    unsigned long tDebounceCurr = millis();
+    if (tIgnoreCurr - tIgnorePrev > ignoreWindow) {
+        if (tDebounceCurr - tDebouncePrev > debounceWindow) {
+            button1Pressed = true;
+            tIgnorePrev = tIgnoreCurr;
+        }
+    }
+    tDebouncePrev = tDebounceCurr;
+}
 
 void setup()
 {
-    full_ring = new Adafruit_NeoPixel(pixelCnt, RING_DATA_PIN, RING_PIXEL_TYPE);
+    full_ring = new Adafruit_NeoPixel(pixelCnt, pixelRingDataPin, RING_PIXEL_TYPE);
     full_ring->begin();
     full_ring->show();
+
+    pinMode(button1Pin, INPUT_PULLUP);
+    attachInterrupt(button1Pin, INT_button1, FALLING);
 }
+
 
 void loop()
 {
@@ -52,11 +75,12 @@ void loop()
     all_same(1000, 0, 0, 0);
 }
 
+
 void clockwork1(int delayMS, int reps)
 {
-    for (int j = 0; j < reps; j++)
+    for (int j = 0; j < reps && !button1Pressed; j++)
     {
-        for (int i = 0; i < 32; i++)
+        for (int i = 0; i < 32 && !button1Pressed; i++)
         {
             full_ring->clear();
             for (int k = 0; k < 6; k++)
@@ -72,13 +96,15 @@ void clockwork1(int delayMS, int reps)
             delay(delayMS);
         }
     }
+    if (button1Pressed) { delay(200); button1Pressed = false; }
 }
+
 
 void spiral1(int delayMS, int reps)
 {
-    for (int j = 0; j < reps; j++)
+    for (int j = 0; j < reps && !button1Pressed; j++)
     {
-        for (int i = 0; i < (pixelCnt*2-1)*3; i++)
+        for (int i = 0; i < (pixelCnt*2-1)*3 && !button1Pressed; i++)
         {
             full_ring->clear();
             full_ring->setPixelColor(
@@ -91,12 +117,14 @@ void spiral1(int delayMS, int reps)
             delay(delayMS);
         }
     }
+    if (button1Pressed) { delay(200); button1Pressed = false; }
 }
 
+
 void random1(int delayMS, int reps) {
-    for (int j = 0; j < reps; j++)
+    for (int j = 0; j < reps && !button1Pressed; j++)
     {
-        for (int i = 0; i  < pixelCnt; i++)
+        for (int i = 0; i < pixelCnt && !button1Pressed; i++)
         {
             full_ring->setPixelColor(
                 i,
@@ -108,7 +136,9 @@ void random1(int delayMS, int reps) {
         full_ring->show();
         delay(delayMS);
     }
+    if (button1Pressed) { delay(200); button1Pressed = false; }
 }
+
 
 void all_same(int delayMS, int col_R, int col_G, int col_B)
 {
@@ -118,4 +148,5 @@ void all_same(int delayMS, int col_R, int col_G, int col_B)
     }
     full_ring->show();
     delay(delayMS);
+    if (button1Pressed) { delay(200); button1Pressed = false; }
 }
